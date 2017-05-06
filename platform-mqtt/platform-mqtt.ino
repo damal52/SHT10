@@ -13,7 +13,6 @@ struct Data {
 char ssid[]     = "MOTOROLA-CA654";
 char password[] = "e0aa4d228a7fd5d71143";
 
-int arrivedcount = 0;
 char printbuf[100];
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,27 +112,27 @@ long getDecimal(float val)
   else if(decPart=0)return(00);           //return 0 if decimal part of float number is not available
 }
 
-void makeString(float f,char* chars){
-dtostrf(f,4,2,chars);
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MAIN LOOP
+// CHECK SENSORS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void loop()
-{
-  if (!client.isConnected())
-    connect();
-
-  // CREATE MESSAGE OBJECT
-  MQTT::Message message;
-  
-  arrivedcount = 0;
+Data getData(){
   setupSHT10();
   struct Data data;
   data = SHT10();
+  return data;
+}
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SEND MQTT MESSAGE
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool sendData(Data data){
+  MQTT::Message message;
+  int arrivedcount = 0;
+  
   String stem = String(int(data.t))+ "."+String(getDecimal(data.t));
   char ctem[stem.length()+1];
   stem.toCharArray(ctem,stem.length()+1);
@@ -141,15 +140,15 @@ void loop()
   String shum = String(int(data.h))+ "."+String(getDecimal(data.h));
   char chum[shum.length()+1];
   shum.toCharArray(chum,shum.length()+1);
-  
+
   String suf = "{\"temperature\":\""+stem+"\",\"humidity\":\""+shum+"\"}";
  
   char buf[suf.length()];
   sprintf(buf,"{\"temperature\":\"%s\",\"humidity\":\"%s\"}",ctem,chum);
-  
+
   Serial.println(suf);
   Serial.println(buf);
-  
+
   message.qos         = MQTT::QOS0;
   message.retained    = false;
   message.dup         = false;
@@ -159,7 +158,26 @@ void loop()
   int rc = client.publish(pub_topic, message);
   while (arrivedcount == 1)
     client.yield(1000);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MAIN LOOP
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int ms = millis();
+int tmill = 0;
+int bmill = 0;
+
+void loop()
+{
+  if(!client.isConnected()){connect();}
+
   
-  delay(3000);
+  if(ms-tmill > 3000){
+    Data data = getData();
+    tmill = ms;
+  }
+  ms = millis();
+
+  }
 }
 
