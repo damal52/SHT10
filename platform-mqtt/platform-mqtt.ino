@@ -171,16 +171,19 @@ void loop()
 {
   if(!client.isConnected()){connect();}
 
-  if(ms-tmill > 3000){
-    sendData(getData());
-    tmill = ms;
-  }
+	// SEND A SENSOR READING EVERY 3 SECONDS
+	if(ms-tmill > 3000){
+		sendData(getData());
+		tmill = ms;
+	}
 
-  if(ms-bmill > 10000){
-    // send battery status
-    bmill = ms;
-  }
-
-  ms = millis();
+	// SEND A BATTERY MESSAGE EVERY 10 SECONDS
+	if(ms-bmill > 10000){
+		// send battery status
+		bmill = ms;
+	}
+	
+	//CONTINUALLY INCREMENT MS WITH CURRENT SYSTEM MILLISECONDS
+	ms = millis();
 }
 
