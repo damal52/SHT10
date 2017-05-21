@@ -35,15 +35,10 @@ const bool ACK    = true;
 #define PULSE_LONG  delay(3)
 #define PULSE_SHORT delay(1)
 
-#define _pinData0 P6_0
-#define _pinData1 P6_1
-#define _pinData2 P6_2
-#define _pinData3 P6_3
-
-#define _pinClock0 P6_4
-#define _pinClock1 P7_0
-#define _pinClock2 P3_6
-#define _pinClock3 P3_5
+#define _pinData0  P6_0
+#define _pinClock0 P6_1
+#define _pinData1  P6_2
+#define _pinClock1 P6_3
 
 #define LED RED_LED
 // INITIAL SETUP ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,13 +87,6 @@ putByte0(MEAS_HUMI);
   Serial.println(hum);
   digitalWrite(LED, LOW);
   delay(1000); 
-
-//  int tempInt = int(temp);
-//  int tempTenth = ((temp-tempInt)*100);  // DPM make an int from temperature decimal places
-//  int humInt = int(hum);
-//  int humTenth = ((hum-humInt)*100);  // DPM make an int from temperature decimal places
-
-
 
 //  struct Data sht10_func() {  // this function is named above
   struct Data d;
