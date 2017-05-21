@@ -31,8 +31,9 @@ void messageArrived(MQTT::MessageData& md)
 WifiIPStack ipstack;
 MQTT::Client<WifiIPStack, Countdown> client = MQTT::Client<WifiIPStack, Countdown>(ipstack);
 
-const char* pub_topic = "device_state";                     //DPM publishing topic
-const char* sub_topic = "mechintelligent/device_state";   //DPM 04.24 subscribing topic
+char* deviceID        = "mech_demo";
+const char* pub_topic = "temperature";
+const char* sub_topic = "temperature";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CONNECTION 
@@ -40,8 +41,12 @@ const char* sub_topic = "mechintelligent/device_state";   //DPM 04.24 subscribin
 
 void connect()
 {
-  char hostname[] = "abodecity.com";
-  int port        = 1883;
+  MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+  
+  char hostname[]       = "abodecity.com";
+  int port              = 1883;  
+  data.MQTTVersion      = 3;
+  data.clientID.cstring = deviceID;
   
   sprintf(printbuf, "Connecting to %s:%d\n", hostname, port);
   Serial.print(printbuf);
@@ -53,10 +58,7 @@ void connect()
     Serial.print(printbuf);
   }
  
-  Serial.println("MQTT connecting");
-  MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-  data.MQTTVersion = 3;
-  data.clientID.cstring = (char*)"mech_ti_04";
+  Serial.println("MQTT connecting");  
   rc = client.connect(data);
   if (rc != 0)
   {
@@ -104,12 +106,12 @@ void setup()
 
 long getDecimal(float val)
 {
-  int intPart = int(val);
-  long decPart = 100*(val-intPart); //I am multiplying by 1000 assuming that the foat values will have a maximum of 3 decimal places. 
-                                    //Change to match the number of decimal places you need
-  if(decPart>0)return(decPart);           //return the decimal part of float number if it is available 
-  else if(decPart<0)return((-1)*decPart); //if negative, multiply by -1
-  else if(decPart=0)return(00);           //return 0 if decimal part of float number is not available
+  int intPart   = int(val);
+  long decPart  = 100*(val-intPart);
+                                  
+  if(decPart>0)return(decPart);
+  else if(decPart<0)return((-1)*decPart);
+  else if(decPart=0)return(00);
 }
 
 
@@ -120,10 +122,11 @@ long getDecimal(float val)
 Data getData(){
   setupSHT10();
   struct Data data;
-  data = SHT10();
+  data    = SHT10();
+  // data.t  = random(20,40);
+  // data.h  = random(2,10);
   return data;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SEND MQTT MESSAGE
@@ -131,23 +134,26 @@ Data getData(){
 
 bool sendData(Data data){
   MQTT::Message message;
-  
-  
+
+  // DEVICE
+  String device = String(deviceID);
+
+  // TEMPERATURE
   String stem = String(int(data.t))+ "."+String(getDecimal(data.t));
   char ctem[stem.length()+1];
   stem.toCharArray(ctem,stem.length()+1);
   
+  // HUMIDITY
   String shum = String(int(data.h))+ "."+String(getDecimal(data.h));
   char chum[shum.length()+1];
   shum.toCharArray(chum,shum.length()+1);
 
-  String suf = "{\"temperature\":\""+stem+"\",\"humidity\":\""+shum+"\"}";
+  String suf = "{\"device\":\""+device+"\",\"temperature\":\""+stem+"\",\"humidity\":\""+shum+"\"}";
  
   char buf[suf.length()];
-  sprintf(buf,"{\"temperature\":\"%s\",\"humidity\":\"%s\"}",ctem,chum);
+  sprintf(buf,"{\"device\":\"%s\",\"temperature\":\"%s\",\"humidity\":\"%s\"}",deviceID,ctem,chum);
 
-  Serial.println(suf);
-  Serial.println(buf);
+  Serial.println("Temperature:"+stem+" Humidity:"+shum);
 
   message.qos         = MQTT::QOS0;
   message.retained    = false;
@@ -163,23 +169,23 @@ bool sendData(Data data){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MAIN LOOP
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int ms    = millis();
-int tmill = millis();
-int bmill = millis();
+unsigned long ms    = millis();
+unsigned long tmill = millis();
+unsigned long bmill = millis();
 
 void loop()
 {
-  if(!client.isConnected()){connect();}
+  if(!client.isConnected())connect();
 
 	// SEND A SENSOR READING EVERY 3 SECONDS
-	if(ms-tmill > 3000){
+	if(ms-tmill > 5000){
 		sendData(getData());
 		tmill = ms;
 	}
 
 	// SEND A BATTERY MESSAGE EVERY 10 SECONDS
-	if(ms-bmill > 10000){
-		// send battery status
+	if(ms-bmill > 60000){
+		Serial.println("BATTERY READING");
 		bmill = ms;
 	}
 	

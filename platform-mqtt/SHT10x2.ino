@@ -53,38 +53,35 @@ void setupSHT10() {   // DPM changed from setup to setupSHT10
 
 }
 // LOOP BEGIN ///////////////////////////////////////////////////////////////////////////////////////////////////
-struct Data SHT10() {   //DPM changed from loop to SHT10
-Serial.println("");
-  Serial.println("Sensor 0");
-resetConnection0();
-delay(100);
-startTransmission0();
-PULSE_LONG;
-putByte0(MEAS_TEMP);
+struct Data SHT10() {
+
+  resetConnection0();
+  delay(100);
+
+  // REQUEST TEMPERATURE
+  startTransmission0();
+  PULSE_LONG;
+  putByte0(MEAS_TEMP);
     
   digitalWrite(LED, HIGH);  
   delay(1000); 
-  Serial.print("Temperature: ");
   result = getByte0(noACK);
   temp = (result*D2h+D1); // Equation for temperature
-  Serial.println(temp);
   digitalWrite(LED, LOW);    
   delay(1000);      
 
-startTransmission0();
-PULSE_LONG;
-putByte0(MEAS_HUMI);
+  // REQUEST HUMIDITY
+  startTransmission0();
+  PULSE_LONG;
+  putByte0(MEAS_HUMI);
     
   digitalWrite(LED, HIGH);
   delay(1000);
-  Serial.print("Humidity: ");
   result = getByte0(noACK);
   hum = (C1 + C2h*result +C3h*result*result); // Equation for humidity
-  Serial.println(hum);
   digitalWrite(LED, LOW);
   delay(1000); 
 
-//  struct Data sht10_func() {  // this function is named above
   struct Data d;
   d.t = temp;
   d.h = hum;
