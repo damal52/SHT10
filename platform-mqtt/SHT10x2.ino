@@ -48,13 +48,9 @@ void setupSHT10() {   // DPM changed from setup to setupSHT10
 
   pinMode(_pinClock0, OUTPUT);  
   pinMode(_pinClock1, OUTPUT);
-  pinMode(_pinClock2, OUTPUT);
-  pinMode(_pinClock3, OUTPUT);
-
   pinMode(_pinData0, OUTPUT);
   pinMode(_pinData1, OUTPUT);
-  pinMode(_pinData2, OUTPUT);
-  pinMode(_pinData3, OUTPUT); 
+
 }
 // LOOP BEGIN ///////////////////////////////////////////////////////////////////////////////////////////////////
 struct Data SHT10() {   //DPM changed from loop to SHT10
